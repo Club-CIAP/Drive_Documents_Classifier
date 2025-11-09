@@ -1,0 +1,538 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1HNJ_w0xZm1pEsbeZwPoe_ZXOhQGrxMJf",
+          "mode": "list",
+          "cachedResultName": "INBOX",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1HNJ_w0xZm1pEsbeZwPoe_ZXOhQGrxMJf"
+        },
+        "event": "fileCreated",
+        "options": {
+          "fileType": "all"
+        }
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        272
+      ],
+      "id": "fbcb931c-decc-4065-809e-0f50b1adec3e",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "W0o0yL5nFLTzvuaP",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        272
+      ],
+      "id": "d8001118-965e-49a7-a837-a102ecb1ef11",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-pro",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-pro"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Clasifica este texto en UNA palabra: Académico, Administrativo, Finanza, Otros. Responde solo con la palabra.\nTexto: {{ $json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        272
+      ],
+      "id": "070bcb7d-52cf-4a07-8b9e-b1f5cd3ab764",
+      "name": "Message a model",
+      "retryOnFail": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "axXZ4Z7TYLNkymZ5",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.content.parts[0].text.trim() }}",
+                    "rightValue": "=Otros",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0059f46a-4297-4766-9af6-35e8044e51ab"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "203ad529-ea8a-4575-ac31-cd630a958813",
+                    "leftValue": "={{ $json.content.parts[0].text.trim() }}",
+                    "rightValue": "=Finanza",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "dc738076-6340-469d-979c-7980c85c51f1",
+                    "leftValue": "={{ $json.content.parts[0].text.trim() }}",
+                    "rightValue": "Académico",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "995faf33-d3cc-4965-a994-94c28454e0e8",
+                    "leftValue": "={{ $json.content.parts[0].text.trim() }}",
+                    "rightValue": "=Administrativo",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        224,
+        240
+      ],
+      "id": "7ee8fffa-8537-4479-98e5-ae2e35d7184e",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Google Drive Trigger').item.json.id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "value": "1KV5ptcodEZtIr_7vbBn-39XH7ZVyzu0C",
+          "mode": "id"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1KV5ptcodEZtIr_7vbBn-39XH7ZVyzu0C",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        432,
+        160
+      ],
+      "id": "c2ea6f69-22f0-4b6a-acb5-2b460d79b207",
+      "name": "Move file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "W0o0yL5nFLTzvuaP",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Google Drive Trigger').item.json.id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "value": "1LPS65HOF07zqEmvJPtZniFzYhz9o1Y5g",
+          "mode": "id"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1LPS65HOF07zqEmvJPtZniFzYhz9o1Y5g"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        432,
+        352
+      ],
+      "id": "e5fd5f84-d69f-4a8e-98ae-eaa78251a5ce",
+      "name": "Move file2",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "W0o0yL5nFLTzvuaP",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Google Drive Trigger').item.json.id }}\n",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "value": "1_Pefsg_XekysPZPiKLGXT8-msyCB-JIe",
+          "mode": "id"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1_Pefsg_XekysPZPiKLGXT8-msyCB-JIe"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        432,
+        544
+      ],
+      "id": "c8246bca-09e6-4d85-9a0a-269a95cd2624",
+      "name": "Move file3",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "W0o0yL5nFLTzvuaP",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Google Drive Trigger').item.json.id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "value": "16-Z4lnx5BD3k7hpHK62YTgATOyADmc1s",
+          "mode": "id"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "16-Z4lnx5BD3k7hpHK62YTgATOyADmc1s",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        432,
+        -32
+      ],
+      "id": "0a4b4a31-0b8f-4a8b-9dca-0b96dd54e583",
+      "name": "Move file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "W0o0yL5nFLTzvuaP",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -416,
+        272
+      ],
+      "id": "ac06b1cf-934a-4e3b-b10c-f62c3b295b48",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "W0o0yL5nFLTzvuaP",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=Documento Clasificado Exitosamente\n📄 Archivo: {{$json.name}}\n⏰ Hora: {{$now}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        656,
+        256
+      ],
+      "id": "e64a56f8-4347-41f6-a900-3e02555dbb9a",
+      "name": "Discord",
+      "webhookId": "db3c4c62-199b-4c1d-ba6b-863c29ece2d7",
+      "retryOnFail": true,
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "lNL841aPBzh8lFaG",
+          "name": "Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -160,
+        272
+      ],
+      "id": "46de86f5-8704-497c-b395-d8fe9d2a81ff",
+      "name": "Wait",
+      "webhookId": "ae5c7882-7a90-4ebb-9954-74cb9fc29378"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Move file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Move file1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Move file2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Move file3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move file": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move file1": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move file2": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move file3": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d276a443-fe52-4b94-b991-3feb1bd039cd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "97b407dc073e24335ec20f754648d3f7265622bf4cf65e91deed65cad746258c"
+  },
+  "id": "mwOqaKsjVXJtYaTi",
+  "tags": []
+}
